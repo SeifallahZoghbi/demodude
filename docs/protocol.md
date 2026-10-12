@@ -88,7 +88,8 @@ Keep it under ~300 characters; it is sent on every model turn.
   elements are found by `[data-demo="<target>"]`. Never use CSS selectors tied to
   layout or text.
 - Total duration per move: 1–4 s. Longer "simulated processing" moves (e.g. a
-  staged analysis) may run up to 12 s but must honour `demo:stop`.
+  staged analysis) may run up to 30 s but must honour `demo:stop`. The panel gives up
+  on a move after 45 s and reports it to the guide as a failure.
 - A move must never throw into the page. Catch, reply `ok:false` with a short
   human-readable `error` (e.g. `"No element for target 'export_button' on this screen"`).
 - `result` is a one-line string the model reads, e.g. `"Now on Pricing. Markup is 18%, selling total EGP 5,452,300."`

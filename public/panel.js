@@ -16,7 +16,9 @@
   var btnContinue = document.getElementById("btn-continue");
   var btnRestart = document.getElementById("btn-restart");
 
-  var MOVE_TIMEOUT_MS = 15000;
+  // Long enough for a staged "processing" move (the protocol allows up to 30 s for
+  // those) plus a slow machine; a real hang is still caught and reported to the guide.
+  var MOVE_TIMEOUT_MS = 45000;
   var READY_TIMEOUT_MS = 4000;
 
   var state = {
@@ -162,6 +164,9 @@
     setStatus(describeMove(move), true);
     postToApp({ type: "demo:move", id: move.id, name: move.name, args: move.args || {} });
     state.moveTimer = setTimeout(function () {
+      // Tell the app to abandon the move too, so it is not still "running" when the
+      // guide tries the next one; its own "stopped" reply is ignored (id already cleared).
+      postToApp({ type: "demo:stop" });
       onMoveResult({ id: move.id, ok: false, error: "The app did not respond in time" });
     }, MOVE_TIMEOUT_MS);
   }
