@@ -1,0 +1,36 @@
+# TEMPLATE — copy to .github/workflows/demo-check.yml and replace every <APP PATHS> / <APP ...>.
+#
+# The demo build's own gate: the app must still type-check (so the fixtures track the real
+# shapes), and the bundle must drive every move in the plan end to end in a real browser with no
+# network call beyond its own assets. Runs on anything that could change a screen or a fixture.
+name: demo-check
+
+on:
+  push:
+    paths:
+      - "<APP PATHS>/**" # e.g. packages/web/** and the packages its screens import
+      - ".github/workflows/demo-check.yml"
+  pull_request:
+    paths:
+      - "<APP PATHS>/**"
+      - ".github/workflows/demo-check.yml"
+
+jobs:
+  demo-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # no version here: it comes from package.json's packageManager field
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: <APP DIR> # the package that lists playwright in devDependencies
+      - name: Type gate (the demo fixtures against the app's real shapes)
+        run: pnpm -F <APP PACKAGE> build # or whatever script runs `tsc --noEmit`
+      - name: Build the demo bundle and drive the plan
+        # e.g. "vite build -c vite.demo.config.ts && node demo/bundle.ts ... && node demo/check.ts --id <id> --dir dist-demo --plan demo/check-plan.json"
+        run: pnpm -F <APP PACKAGE> demo:check

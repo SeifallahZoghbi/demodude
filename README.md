@@ -30,6 +30,9 @@ pnpm start       # node dist/server.js
 
 ## Add an app
 
+Teams: the full brief is `docs/add-your-app.md`, with drop-in pieces (bridge, cursor,
+bundle writer, Playwright check, CI workflow, Vite config) in `starter/`. In short:
+
 1. Build the app's demo bundle as described in `docs/protocol.md`: `manifest.json`,
    `moves.json`, `knowledge.md`, `scenario.md`, the entry HTML and its assets.
    The bridge must honour `demo:move`, `demo:stop`, `demo:reset` and emit

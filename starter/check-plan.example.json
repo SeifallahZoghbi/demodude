@@ -1,0 +1,9 @@
+[
+  { "name": "go_to_screen", "args": { "screen": "home" }, "expect": "home" },
+  { "name": "go_to_screen", "args": { "screen": "list" } },
+  { "name": "point_at", "args": { "target": "list_row_1" }, "screenshot": true },
+  { "name": "click", "args": { "target": "list_row_1" } },
+  { "name": "set_field", "args": { "value": 20 }, "expect": "20" },
+  { "name": "simulate_processing", "args": {}, "timeoutMs": 40000 },
+  { "name": "reset_demo", "args": {} }
+]
