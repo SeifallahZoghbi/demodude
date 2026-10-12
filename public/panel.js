@@ -163,7 +163,17 @@
     setPhase("moving");
     setStatus(describeMove(move), true);
     postToApp({ type: "demo:move", id: move.id, name: move.name, args: move.args || {} });
+    armMoveTimer(move);
+  }
+
+  function armMoveTimer(move) {
     state.moveTimer = setTimeout(function () {
+      // A hidden tab throttles the app's timers, so a slow move there is not a hang:
+      // keep waiting until the visitor comes back, then give it one more full window.
+      if (document.hidden && state.pendingMove && state.pendingMove.id === move.id) {
+        armMoveTimer(move);
+        return;
+      }
       // Tell the app to abandon the move too, so it is not still "running" when the
       // guide tries the next one; its own "stopped" reply is ignored (id already cleared).
       postToApp({ type: "demo:stop" });
