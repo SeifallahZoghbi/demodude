@@ -171,8 +171,23 @@ export function createGuide(opts: {
     }));
   }
 
+  // A second breakpoint on the newest user message caches the conversation so far,
+  // so each turn re-reads the history at the cache rate instead of paying full
+  // input price for it again. The copy is shallow: the stored history is untouched.
+  function withHistoryBreakpoint(messages: MessageParam[]): MessageParam[] {
+    const last = messages[messages.length - 1];
+    if (last === undefined || last.role !== "user") return messages;
+    const blocks: Anthropic.Beta.BetaContentBlockParam[] =
+      typeof last.content === "string" ? [{ type: "text", text: last.content }] : [...last.content];
+    const tail = blocks[blocks.length - 1];
+    if (tail === undefined) return messages;
+    blocks[blocks.length - 1] = { ...tail, cache_control: { type: "ephemeral" } } as typeof tail;
+    return [...messages.slice(0, -1), { ...last, content: blocks }];
+  }
+
   async function runTurn(input: TurnInput): Promise<TurnOutcome> {
-    const { app, messages, onText, signal } = input;
+    const { app, onText, signal } = input;
+    const messages = withHistoryBreakpoint(input.messages);
     const params: StreamParams = {
       model,
       max_tokens: LIMITS.maxOutputTokens,

@@ -1,4 +1,5 @@
 import path from "node:path";
+import type Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it } from "vitest";
 import { loadBundle } from "../src/apps.js";
 import { REFUSAL_LINE, createGuide } from "../src/claude.js";
@@ -72,6 +73,28 @@ describe("claude guide", () => {
     expect(params.fallbacks).toBe("default");
     expect(params.tool_choice).toEqual({ type: "auto", disable_parallel_tool_use: true });
     expect("thinking" in params).toBe(false);
+  });
+
+  it("puts a cache breakpoint on the newest user message without mutating history", async () => {
+    const app = await loadBundle(stubDir, "_stub");
+    const fake = createFakeClient([{ text: "Hi." }]);
+    const guide = createGuide({ client: fake.client, log: quiet });
+    const history: Anthropic.Beta.BetaMessageParam[] = [
+      { role: "user", content: "hello" },
+      { role: "assistant", content: [{ type: "text", text: "Hi." }] },
+      { role: "user", content: [{ type: "text", text: "[state] {}" }, { type: "text", text: "show me" }] },
+    ];
+    await guide.runTurn({ app, messages: history, onText: quiet });
+    const sent = fake.calls[0]!.messages;
+    const last = sent[sent.length - 1]!;
+    expect(Array.isArray(last.content)).toBe(true);
+    const blocks = last.content as Anthropic.Beta.BetaTextBlockParam[];
+    expect(blocks[blocks.length - 1]!.cache_control).toEqual({ type: "ephemeral" });
+    expect(blocks[0]!.cache_control).toBeUndefined();
+    expect((sent[0]!.content as Anthropic.Beta.BetaTextBlockParam[] | string)).toBe("hello");
+    // the caller's array is untouched
+    const original = history[2]!.content as Anthropic.Beta.BetaTextBlockParam[];
+    expect(original[1]!.cache_control).toBeUndefined();
   });
 
   it("turns a streamed tool_use into a move with a parsed input", async () => {

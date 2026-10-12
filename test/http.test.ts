@@ -191,7 +191,7 @@ describe("http", () => {
     const html = await panel.text();
     expect(html).toContain('"iframePath":"/demo/apps/_stub/"');
     expect(html).toContain('"basePath":"/demo"');
-    expect(html).toContain('href="/demo/static/panel.css"');
+    expect(html).toMatch(/href="\/demo\/static\/panel\.css\?v=[a-z0-9]+"/);
     expect((await based.request("/demo/static/panel.js")).status).toBe(200);
     expect((await based.request("/demo/apps/_stub/")).status).toBe(200);
     expect((await based.request("/demo/")).status).toBe(200);

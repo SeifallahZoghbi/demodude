@@ -140,6 +140,8 @@ function cacheControlFor(relPath: string): string {
   return "public, max-age=300";
 }
 
+const BOOT_VERSION = Date.now().toString(36);
+
 export function createApp(deps: AppDeps): Hono {
   const base = normaliseBase(deps.basePath);
   const log = deps.log ?? ((msg: string) => console.log(msg));
@@ -263,6 +265,9 @@ ${items ? `<ul>${items}</ul>` : "<p>No app bundles loaded. Add one under APPS_DI
     const html = template
       .replaceAll("{{APP_NAME}}", escapeHtml(loaded.manifest.name))
       .replaceAll("{{BASE}}", escapeHtml(base))
+      // A per-boot version on the panel assets: a redeploy restarts the service, so a
+      // browser that cached panel.js across the restart cannot run stale panel code.
+      .replaceAll("{{ASSET_VERSION}}", BOOT_VERSION)
       .replaceAll("{{CONFIG_JSON}}", JSON.stringify(config).replaceAll("<", "\\u003c"));
     return c.html(html, 200, { "Cache-Control": "no-cache" });
   });
