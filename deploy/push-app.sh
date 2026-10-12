@@ -8,8 +8,12 @@ set -euo pipefail
 
 APP="${1:?app id}"
 BUNDLE="${2:?bundle dir}"
-HOST="${3:-aten@49.13.196.45}"
-REMOTE_DIR="${4:-/home/aten/demodude}"
+# The server is not written into this public repo: put `user@host` in deploy/.host
+# (gitignored) or pass it as the third argument / DEMODUDE_HOST.
+HERE="$(cd "$(dirname "$0")" && pwd)"
+HOST="${3:-${DEMODUDE_HOST:-$(cat "$HERE/.host" 2>/dev/null || true)}}"
+[ -n "$HOST" ] || { echo "no server: pass user@host, set DEMODUDE_HOST, or write deploy/.host" >&2; exit 1; }
+REMOTE_DIR="${4:-/home/${HOST%%@*}/demodude}"
 
 for f in manifest.json moves.json knowledge.md scenario.md index.html; do
   [ -f "$BUNDLE/$f" ] || { echo "bundle is missing $f" >&2; exit 1; }
@@ -27,4 +31,4 @@ tar czf - -C "$BUNDLE" . | ssh "$HOST" "
   mv '$REMOTE_DIR/apps/.$APP.new' '$REMOTE_DIR/apps/$APP'
   rm -rf '$REMOTE_DIR/apps/.$APP.old'
 "
-echo "Done. Verify:  curl -s https://aten.thefoundry.run/demo/healthz"
+echo "Done. Verify the service's /demo/healthz lists the app."

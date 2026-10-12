@@ -6,8 +6,12 @@
 # finishes, an admin restarts the unit:  sudo systemctl restart demodude
 set -euo pipefail
 
-HOST="${1:-aten@49.13.196.45}"
-REMOTE_DIR="${2:-/home/aten/demodude}"
+# The server is not written into this public repo: put `user@host` in deploy/.host
+# (gitignored) or pass it as the first argument / DEMODUDE_HOST.
+HERE="$(cd "$(dirname "$0")" && pwd)"
+HOST="${1:-${DEMODUDE_HOST:-$(cat "$HERE/.host" 2>/dev/null || true)}}"
+[ -n "$HOST" ] || { echo "no server: pass user@host, set DEMODUDE_HOST, or write deploy/.host" >&2; exit 1; }
+REMOTE_DIR="${2:-/home/${HOST%%@*}/demodude}"
 
 cd "$(dirname "$0")/.."
 

@@ -114,3 +114,5 @@ sudo systemctl daemon-reload && sudo systemctl enable --now demodude
 ```
 
 Updates: `./deploy/push.sh`, then the printed restart command. App bundles: `./deploy/push-app.sh`.
+Both scripts read the server (`user@host`) from `deploy/.host`, which is gitignored, or
+from `DEMODUDE_HOST`; this repo is public and does not name the server.

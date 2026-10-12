@@ -4,6 +4,8 @@ data/
 .env
 .env.*
 !.env.example
+# The deploy target (user@host); the repo is public, the server is not advertised.
+deploy/.host
 # App bundles are built elsewhere and copied in; only the local stub is tracked.
 apps/*
 !apps/_stub/
