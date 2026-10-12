@@ -1,0 +1,7 @@
+{
+  "id": "_stub",
+  "name": "Stub Quoting App",
+  "entry": "index.html",
+  "startPath": "/",
+  "version": "local-dev"
+}

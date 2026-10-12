@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stub Quoting App</title>
+  <style>
+    :root { --accent: #2563eb; --border: #e5e7eb; --muted: #6b7280; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; color: #1f2937; background: #fafafa; }
+    header { display: flex; gap: 6px; padding: 10px 16px; background: #fff; border-bottom: 1px solid var(--border); }
+    header button { font: inherit; padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; }
+    header button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    main { padding: 20px 16px; max-width: 760px; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    table { border-collapse: collapse; width: 100%; background: #fff; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
+    tr.selected td { background: #eff6ff; }
+    .flag { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 13px; }
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 12px; }
+    label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    input[type=number] { font: inherit; padding: 6px 8px; width: 120px; border: 1px solid var(--border); border-radius: 6px; }
+    .totals div { display: flex; justify-content: space-between; padding: 4px 0; }
+    .totals .grand { font-weight: 600; border-top: 1px solid var(--border); margin-top: 6px; padding-top: 8px; }
+    .hint { color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <button data-nav="projects" class="active">Projects</button>
+    <button data-nav="boards">Boards</button>
+    <button data-nav="pricing">Pricing</button>
+  </header>
+  <main>
+    <section class="screen active" id="screen-projects">
+      <h2>Projects</h2>
+      <table>
+        <thead><tr><th>Project</th><th>Client</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr data-demo="project_row"><td>Al-Marsa Business Park — Phase 2</td><td>Marsa Developments</td><td>Priced</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="screen" id="screen-boards">
+      <h2>Boards — Al-Marsa Business Park — Phase 2</h2>
+      <table>
+        <thead><tr><th>Tag</th><th>Name</th><th>Rating</th><th>Icu</th><th>Cost (EGP)</th></tr></thead>
+        <tbody>
+          <tr data-demo="board_row_MDB-01" data-board="MDB-01"><td>MDB-01</td><td>Main Distribution Board</td><td>2500 A</td><td>65 kA</td><td>1,860,000</td></tr>
+          <tr data-demo="board_row_EMDB-01" data-board="EMDB-01"><td>EMDB-01</td><td>Emergency Main Board</td><td>1000 A</td><td>50 kA</td><td>742,000</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <strong>Short-circuit withstand check</strong>
+        <p data-demo="withstand_flag"><span class="flag">DB-P1 re-selected</span> XT3 25 kA did not meet the 36 kA bus rating; engine chose XT3 N (36 kA).</p>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-pricing">
+      <h2>Pricing</h2>
+      <div class="card">
+        <label for="markup">Markup (%)</label>
+        <input id="markup" data-demo="markup_input" type="number" min="0" max="60" step="1" value="18">
+        <p class="hint">Negotiated per project. Totals recompute live.</p>
+      </div>
+      <div class="card totals" data-demo="pricing_totals">
+        <div><span>Cost total</span><span id="t-cost"></span></div>
+        <div><span>Selling total (<span id="t-pct"></span>% markup)</span><span id="t-sell"></span></div>
+        <div class="grand"><span>With 14% VAT</span><span id="t-vat"></span></div>
+      </div>
+    </section>
+  </main>
+  <script src="demo.js"></script>
+</body>
+</html>

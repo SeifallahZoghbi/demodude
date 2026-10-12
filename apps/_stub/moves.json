@@ -1,0 +1,55 @@
+[
+  {
+    "name": "go_to_screen",
+    "description": "Navigate to a screen of the app. Use this before pointing at anything on that screen. Going to the screen that is already open is a no-op success.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "screen": {
+          "type": "string",
+          "enum": ["projects", "boards", "pricing"],
+          "description": "projects = project list; boards = the switchboards of the demo project; pricing = markup and totals."
+        }
+      },
+      "required": ["screen"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "point_at",
+    "description": "Scroll to and highlight an element on the current screen with the cursor hovering over it, without clicking. Fails if the target is not on the current screen.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "string",
+          "enum": ["project_row", "board_row_MDB-01", "board_row_EMDB-01", "withstand_flag", "markup_input", "pricing_totals"]
+        }
+      },
+      "required": ["target"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_markup",
+    "description": "On the Pricing screen: type a new markup percentage; totals recompute live. Navigate to pricing first.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "percent": { "type": "number", "minimum": 0, "maximum": 60 }
+      },
+      "required": ["percent"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "reset_demo",
+    "description": "Put the demo data back to its initial state and return to the project list.",
+    "input_schema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  }
+]

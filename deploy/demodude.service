@@ -1,0 +1,18 @@
+[Unit]
+Description=demodude AI-guided demo service
+After=network.target
+
+[Service]
+Type=simple
+User=aten
+WorkingDirectory=/home/aten/demodude
+EnvironmentFile=/etc/demodude/env
+ExecStart=/usr/bin/node dist/server.js
+Restart=on-failure
+RestartSec=3
+MemoryMax=1G
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
