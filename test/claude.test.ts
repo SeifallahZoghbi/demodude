@@ -34,6 +34,31 @@ describe("claude guide", () => {
     expect(reversed.map((t) => t.name)).toEqual(tools.map((t) => t.name));
   });
 
+  it("strips schema keywords strict tools reject, but keeps property names", async () => {
+    const app = await loadBundle(stubDir, "_stub");
+    const guide = createGuide({ client: createFakeClient([]).client, log: quiet });
+    const move = {
+      ...app.moves[0]!,
+      name: "ranged",
+      input_schema: {
+        type: "object",
+        properties: {
+          percent: { type: "number", minimum: 0, maximum: 60, default: 18 },
+          pattern: { type: "string", pattern: "^[a-z]+$", maxLength: 5 },
+          tags: { type: "array", items: { type: "string", format: "uuid" }, minItems: 1 },
+        },
+        required: ["percent", "pattern", "tags"],
+        additionalProperties: false,
+      },
+    };
+    const [tool] = guide.buildTools([move]);
+    const props = tool!.input_schema.properties as Record<string, Record<string, unknown>>;
+    expect(props.percent).toEqual({ type: "number" });
+    expect(props.pattern).toEqual({ type: "string" });
+    expect(props.tags).toEqual({ type: "array", items: { type: "string" } });
+    expect(tool!.input_schema.required).toEqual(["percent", "pattern", "tags"]);
+  });
+
   it("sends the required request shape", async () => {
     const app = await loadBundle(stubDir, "_stub");
     const fake = createFakeClient([{ text: "Hi." }]);

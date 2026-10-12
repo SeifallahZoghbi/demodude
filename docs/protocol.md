@@ -53,6 +53,10 @@ for the model, not for humans.
 Rules:
 - `input_schema` must be valid JSON Schema with `additionalProperties: false` and a
   `required` list (the service sets `strict: true` on every tool).
+- Strict tools accept only a schema subset: no `minimum`/`maximum`, `minLength`/
+  `maxLength`, `pattern`, `format`, `default` or similar. State ranges in the
+  description ("0 to 60") and validate inside the move. The service strips these
+  keywords defensively, but do not rely on it.
 - Names are `snake_case`, unique, and stable; renaming a move breaks saved sessions.
 - Keep the set small (under 15). The AI picks from this list every turn.
 

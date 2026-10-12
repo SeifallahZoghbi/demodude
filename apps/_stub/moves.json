@@ -36,7 +36,7 @@
     "input_schema": {
       "type": "object",
       "properties": {
-        "percent": { "type": "number", "minimum": 0, "maximum": 60 }
+        "percent": { "type": "number", "description": "Markup percent, 0 to 60." }
       },
       "required": ["percent"],
       "additionalProperties": false

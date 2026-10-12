@@ -100,6 +100,34 @@ Available moves:
 ${lines.join("\n")}`;
 }
 
+// Strict tools accept only a JSON Schema subset: the API rejects numeric and
+// string range keywords ("For 'number' type, properties maximum, minimum are not
+// supported"). App authors keep such limits in the description; we strip the
+// keywords here so one stray `maximum` cannot take a whole demo down.
+const UNSUPPORTED_SCHEMA_KEYWORDS = new Set([
+  "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf",
+  "minLength", "maxLength", "pattern", "format", "minItems", "maxItems", "uniqueItems",
+  "minProperties", "maxProperties", "default", "examples",
+]);
+
+export function stripUnsupportedSchemaKeywords(schema: unknown): unknown {
+  if (Array.isArray(schema)) return schema.map(stripUnsupportedSchemaKeywords);
+  if (schema === null || typeof schema !== "object") return schema;
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(schema as Record<string, unknown>)) {
+    if (UNSUPPORTED_SCHEMA_KEYWORDS.has(key)) continue;
+    // "properties" is a map of names to schemas; a property literally named
+    // "pattern" or "format" must survive, so recurse into its values only.
+    out[key] =
+      key === "properties" && value !== null && typeof value === "object" && !Array.isArray(value)
+        ? Object.fromEntries(
+            Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, stripUnsupportedSchemaKeywords(v)]),
+          )
+        : stripUnsupportedSchemaKeywords(value);
+  }
+  return out;
+}
+
 function sortedMoves(moves: Move[]): Move[] {
   return [...moves].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 }
@@ -138,7 +166,7 @@ export function createGuide(opts: {
     return sortedMoves(moves).map((m) => ({
       name: m.name,
       description: m.description,
-      input_schema: m.input_schema as ToolParam["input_schema"],
+      input_schema: stripUnsupportedSchemaKeywords(m.input_schema) as ToolParam["input_schema"],
       strict: true,
     }));
   }
