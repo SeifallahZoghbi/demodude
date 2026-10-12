@@ -20,6 +20,9 @@
   // those) plus a slow machine; a real hang is still caught and reported to the guide.
   var MOVE_TIMEOUT_MS = 45000;
   var READY_TIMEOUT_MS = 4000;
+  // After a move lands, let the visitor look at the screen before the guide speaks again.
+  // Typing, Pause or an error cut the beat short.
+  var BEAT_MS = 3000;
 
   var state = {
     sessionId: null,
@@ -31,6 +34,7 @@
     appState: null, // latest demo:state payload
     ready: false,
     moveTimer: null,
+    beatTimer: null, // the pause between a move landing and the next turn
     currentBubble: null,
   };
 
@@ -155,7 +159,21 @@
       }
       return;
     }
-    runTurn({ moveResult: result, state: state.appState || undefined });
+    if (!result.ok) {
+      runTurn({ moveResult: result, state: state.appState || undefined });
+      return;
+    }
+    // The move landed: hold the result for a beat so the screen can be looked at. The held
+    // result rides along with whatever comes next (the beat ending, or the visitor typing).
+    state.heldResult = result;
+    setStatus("Take a look…", false);
+    state.beatTimer = setTimeout(function () {
+      state.beatTimer = null;
+      if (state.phase !== "moving" || !state.heldResult) return;
+      var held = state.heldResult;
+      state.heldResult = null;
+      runTurn({ moveResult: held, state: state.appState || undefined });
+    }, BEAT_MS);
   }
 
   function startMove(move) {
@@ -320,6 +338,8 @@
 
   function pause() {
     if (state.phase === "dead") return;
+    clearTimeout(state.beatTimer);
+    state.beatTimer = null;
     if (state.controller) {
       state.controller.abort();
       state.controller = null;
@@ -357,6 +377,8 @@
   function restart() {
     if (state.controller) state.controller.abort();
     clearTimeout(state.moveTimer);
+    clearTimeout(state.beatTimer);
+    state.beatTimer = null;
     state.controller = null;
     state.pendingMove = null;
     state.heldResult = null;

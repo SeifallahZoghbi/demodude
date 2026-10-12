@@ -16,7 +16,7 @@ describe("claude guide", () => {
     expect(system).toHaveLength(4);
     expect(system.slice(0, 3).every((b) => b.cache_control === undefined)).toBe(true);
     expect(system[3]?.cache_control).toEqual({ type: "ephemeral" });
-    expect(system[0]?.text).toContain("1 to 3 short sentences");
+    expect(system[0]?.text).toContain("2 to 4 plain, friendly sentences");
     expect(system[1]?.text).toContain(app.knowledge.trim());
     expect(system[2]?.text).toContain(app.scenario.trim());
   });
