@@ -78,7 +78,7 @@ describe("http", () => {
     expect(panel.status).toBe(200);
     const html = await panel.text();
     expect(html).toContain("Stub Quoting App");
-    expect(html).toContain('"iframePath":"/apps/_stub/"');
+    expect(html).toContain('"iframePath":"/apps/_stub"');
     expect(html).toContain("/static/panel.js");
 
     const health = await app.request("/healthz");
@@ -104,7 +104,13 @@ describe("http", () => {
 
     expect((await app.request("/apps/_stub/missing.png")).status).toBe(404);
     expect((await app.request("/apps/_stub/..%2F..%2Fpackage.json")).status).toBe(404);
-    expect((await app.request("/apps/_stub")).status).toBe(302);
+    // The bare bundle path serves the entry itself (with a <base> so relative assets still
+    // resolve): a proxy in front may never forward the slash-terminated form.
+    const bare = await app.request("/apps/_stub");
+    expect(bare.status).toBe(200);
+    const bareHtml = await bare.text();
+    expect(bareHtml).toContain('<base href="/apps/_stub/">');
+    expect(bareHtml).toContain("demo.js");
   });
 
   it("runs start -> move -> moveResult -> end_turn over SSE", async () => {
@@ -189,7 +195,8 @@ describe("http", () => {
     const panel = await based.request("/demo/_stub");
     expect(panel.status).toBe(200);
     const html = await panel.text();
-    expect(html).toContain('"iframePath":"/demo/apps/_stub/"');
+    expect(html).toContain('"iframePath":"/demo/apps/_stub"');
+    expect((await based.request("/demo/apps/_stub")).status).toBe(200);
     expect(html).toContain('"basePath":"/demo"');
     expect(html).toMatch(/href="\/demo\/static\/panel\.css\?v=[a-z0-9]+"/);
     expect((await based.request("/demo/static/panel.js")).status).toBe(200);

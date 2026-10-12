@@ -209,8 +209,10 @@ ${items ? `<ul>${items}</ul>` : "<p>No app bundles loaded. Add one under APPS_DI
     const prefix = `${bundlePath(id)}/`;
     // c.req.path drops a trailing slash in non-strict mode; the raw pathname keeps it.
     const pathname = new URL(c.req.url).pathname;
-    // Relative asset URLs in the bundle only resolve under the trailing slash.
-    if (!pathname.startsWith(prefix)) return c.redirect(prefix, 302);
+    // The bare path (no trailing slash) serves the entry too. A reverse proxy in front may
+    // never forward the slash-terminated form (Vercel's rewrites on aten.design answered
+    // "/demo/apps/aten/" from the website instead), so the entry must not depend on it.
+    if (!pathname.startsWith(prefix)) return serveEntry(loaded, c);
     let rel: string;
     try {
       rel = decodeURIComponent(pathname.slice(prefix.length));
@@ -218,8 +220,28 @@ ${items ? `<ul>${items}</ul>` : "<p>No app bundles loaded. Add one under APPS_DI
       return c.text("bad path", 400);
     }
     if (rel === "" || rel.endsWith("/")) rel += loaded.manifest.entry;
+    if (rel === loaded.manifest.entry) return serveEntry(loaded, c);
     return serveBundleFile(loaded, rel, c);
   });
+
+  // The entry page gets a <base> so relative asset URLs resolve from the bundle folder
+  // whether the page was reached with or without the trailing slash.
+  async function serveEntry(loaded: LoadedApp, c: Context): Promise<Response> {
+    const abs = safeJoin(loaded.dir, loaded.manifest.entry);
+    if (!abs) return c.text("not found", 404);
+    let html: string;
+    try {
+      html = await readFile(abs, "utf8");
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") return c.text("not found", 404);
+      throw err;
+    }
+    const baseTag = `<base href="${escapeHtml(bundlePath(loaded.id))}/">`;
+    const withBase = /<head[^>]*>/i.test(html)
+      ? html.replace(/<head[^>]*>/i, (m) => `${m}${baseTag}`)
+      : `${baseTag}${html}`;
+    return c.html(withBase, 200, { "Cache-Control": "no-cache" });
+  }
 
   async function serveBundleFile(loaded: LoadedApp, rel: string, c: Context): Promise<Response> {
     const abs = safeJoin(loaded.dir, rel);
@@ -259,7 +281,10 @@ ${items ? `<ul>${items}</ul>` : "<p>No app bundles loaded. Add one under APPS_DI
       appId: loaded.id,
       appName: loaded.manifest.name,
       basePath: base,
-      iframePath: `${bundlePath(loaded.id)}/${startPath}`,
+      // No trailing slash when the start path is the root: a reverse proxy in front (Vercel's
+      // rewrite rules on aten.design) does not pass slash-terminated paths through, and the
+      // bundle entry is served at the bare path too.
+      iframePath: startPath === "" ? bundlePath(loaded.id) : `${bundlePath(loaded.id)}/${startPath}`,
     };
     const template = await readFile(path.join(deps.publicDir, "panel.html"), "utf8");
     const html = template
